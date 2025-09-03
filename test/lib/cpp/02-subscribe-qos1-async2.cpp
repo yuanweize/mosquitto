@@ -2,6 +2,10 @@
 #include <cstdio>
 #include <cstring>
 
+#ifdef WIN32
+#  include <windows.h>
+#endif
+
 #include <mosquitto/libmosquittopp.h>
 
 /* mosquitto_connect_async() test, with mosquitto_loop_start() called after mosquitto_connect_async(). */
@@ -51,7 +55,9 @@ int main(int argc, char *argv[])
 {
 	mosquittopp_test *mosq;
 	int rc;
+#ifndef WIN32
 	struct timespec tv = { 0, (long)100e6 };
+#endif
 
 	if(argc != 2){
 		return 1;
@@ -63,7 +69,11 @@ int main(int argc, char *argv[])
 	mosq = new mosquittopp_test("subscribe-qos1-test");
 
 	/* Help with possible race condition on CI */
+#ifdef WIN32
+	Sleep(100);
+#else
 	nanosleep(&tv, NULL);
+#endif
 
 	rc = mosq->connect_async("localhost", port, 60, NULL);
 	if(rc){
@@ -78,9 +88,15 @@ int main(int argc, char *argv[])
 	}
 
 	/* 50 millis to be system polite */
-	tv.tv_nsec = (long)50e6;
+#ifndef WIN32
+	tv.tv_nsec = 50e6;
+#endif
 	while(should_run){
+#ifdef WIN32
+		Sleep(50);
+#else
 		nanosleep(&tv, NULL);
+#endif
 	}
 
 	mosq->disconnect();
