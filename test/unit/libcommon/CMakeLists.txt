@@ -19,3 +19,4 @@ target_link_libraries(libcommon-test
 		libmosquitto_common
 )
 add_test(NAME unit-libcommon-test COMMAND libcommon-test)
+test_set_windows_path(unit-libcommon-test)
